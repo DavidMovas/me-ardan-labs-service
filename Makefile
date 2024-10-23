@@ -72,3 +72,8 @@ dev-up:
 
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
+
+# ------------------------------------------------------------------------------
+
+dev-status:
+	watch -n 2 kubectl get pods -o wide --all-namespaces
