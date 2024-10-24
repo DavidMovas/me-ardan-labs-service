@@ -107,3 +107,22 @@ dev-down:
 
 dev-status:
 	watch -n 2 kubectl get pods -o wide --all-namespaces
+
+# ------------------------------------------------------------------------------
+
+dev-load:
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
+	wait;
+
+dev-apply:
+	kustomize build zarf/k8s/dev/auth | kubectl apply -f -
+    kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(AUTH_APP) --timeout=120s --for=condition=Ready
+
+dev-logs:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run api/tooling/logfmt/main.go -service=$(SALES_APP)
+
+dev-describe-deployment:
+	kubectl describe deployment --namespace=$(NAMESPACE) $(SALES_APP)
+
+dev-describe-sales:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
