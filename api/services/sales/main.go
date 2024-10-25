@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
 	"github.com/DavidMovas/me-ardan-labs-service/foundation/logger"
 	"github.com/ardanlabs/conf/v3"
@@ -40,6 +41,8 @@ func main() {
 
 func run(ctx context.Context, log *logger.Logger) error {
 
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "build", build)
+
 	cfg := struct {
 		conf.Version
 		Web struct {
@@ -68,7 +71,24 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
-	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "build", build)
+	// -------------------------------------------------------------------------
+	// App Starting
+
+	log.Info(ctx, "starting service", "version", cfg.Build)
+	defer log.Info(ctx, "shutdown complete")
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+	log.Info(ctx, "startup", "config", out)
+
+	log.BuildInfo(ctx)
+
+	expvar.NewString("build").Set(cfg.Build)
+
+	// -------------------------------------------------------------------------
+	// Shutdown
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
