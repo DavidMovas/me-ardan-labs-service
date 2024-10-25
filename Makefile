@@ -117,3 +117,14 @@ dev-describe-deployment:
 
 dev-describe-sales:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
+
+# ------------------------------------------------------------------------------
+
+deps-reset:
+	git checkout -- go.mod
+	go mod tidy
+	go mod vendor
+
+tidy:
+	go mod tidy
+	go mod vendor
